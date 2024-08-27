@@ -30,6 +30,7 @@ else
 fi
 
 # Install necessary packages
+print_yellow "Installing necessary packages..."
 apt update
 apt install -y apache2 wget nmap testssl.sh jq curl ufw
 
@@ -37,21 +38,25 @@ apt install -y apache2 wget nmap testssl.sh jq curl ufw
 read -p "$(print_yellow 'Please enter the website URL to download: ')" site_url
 
 # Download website to web server directory
+print_yellow "Downloading website content..."
 wget --no-check-certificate -O /var/www/html/index.html "$site_url"
 
 # Prompt user for website directory name
 read -p "$(print_yellow 'Please enter the website directory name: ')" site_dir
 
 # Change ownership and permissions of the website directory
+print_yellow "Setting file permissions..."
 chown -R www-data:www-data /var/www/html/"$site_dir"
 chmod -R 755 /var/www/html/"$site_dir"
 
 # Run Linux Optimizer script
+print_yellow "Downloading and running the Linux optimizer script..."
 wget "https://raw.githubusercontent.com/hawshemi/Linux-Optimizer/main/linux-optimizer.sh" -O linux-optimizer.sh
 chmod +x linux-optimizer.sh
 bash linux-optimizer.sh
 
 # Enable UFW and open necessary ports
+print_yellow "Enabling UFW and opening necessary ports..."
 ufw enable
 ufw allow 22/tcp
 ufw allow 80
@@ -68,56 +73,58 @@ if [[ -z "$public_ip" ]]; then
     exit 1
 fi
 
+# Find ASN from IP
+asn=$(whois "$public_ip" | grep "origin:" | awk '{print $2}')
+
+if [[ -z "$asn" ]]; then
+    print_red "Could not retrieve ASN from IP address."
+    exit 1
+fi
+
 print_yellow "Public IP address of the server: $public_ip"
+print_yellow "ASN: $asn"
 
-# Prompt user if they want to find SNI domains using TLS 1.3
-read -p "$(print_yellow 'Do you want to find SNI domains using TLS 1.3? (yes/no): ')" find_sni
+# Find domains based on ASN
+print_yellow "Finding domains associated with ASN $asn..."
 
-if [[ "$find_sni" == "yes" ]]; then
-    print_green "Finding SNI domains using TLS 1.3..."
+# Fetch the domains from the ASN using bgp.he.net
+domains=$(curl -s "https://bgp.he.net/AS${asn}" | grep -oP '(?<=<a href="/ips/)[^"]*' | sort -u)
 
-    # Use crt.sh to get domains associated with the server's IP
-    print_yellow "Retrieving domains associated with the server's IP..."
+if [[ -z "$domains" ]]; then
+    print_red "No domains found for ASN $asn."
+else
+    print_yellow "Found domains:"
+    echo "$domains"
 
-    # Query crt.sh for domains associated with the public IP
-    domains=$(curl -s "https://crt.sh/?q=${public_ip}&output=json" | jq -r '.[].name_value' | sort -u)
+    # Check for TLS 1.3 support using testssl.sh
+    print_yellow "Checking for TLS 1.3 support on found domains..."
 
-    if [[ -z "$domains" ]]; then
-        print_red "No domains found for the server's IP."
+    tls13_domains=()
+    for domain in $domains; do
+        tls_result=$(testssl.sh --quiet --jsonfile /dev/stdout --protocols "$domain" | grep '"TLS 1.3"' | wc -l)
+        if [[ "$tls_result" -gt 0 ]]; then
+            tls13_domains+=("$domain")
+        fi
+    done
+
+    # Show the results
+    if [ ${#tls13_domains[@]} -eq 0 ]; then
+        print_red "No domains with TLS 1.3 support found."
     else
-        print_yellow "Found domains:"
-        echo "$domains"
-
-        # Check for TLS 1.3 support using testssl.sh
-        print_yellow "Checking for TLS 1.3 support on found domains..."
-
-        tls13_domains=()
-        for domain in $domains; do
-            tls_result=$(testssl.sh --quiet --jsonfile /dev/stdout --protocols "$domain" | grep '"TLS 1.3"' | wc -l)
-            if [[ "$tls_result" -gt 0 ]]; then
-                tls13_domains+=("$domain")
+        print_green "Found the following SNI domains using TLS 1.3:"
+        for i in "${!tls13_domains[@]}"; do
+            echo "$((i + 1)). ${tls13_domains[$i]}"
+            if [ "$i" -ge 4 ]; then
+                break
             fi
         done
-
-        # Show the results
-        if [ ${#tls13_domains[@]} -eq 0 ]; then
-            print_red "No domains with TLS 1.3 support found."
-        else
-            print_green "Found the following SNI domains using TLS 1.3:"
-            for i in "${!tls13_domains[@]}"; do
-                echo "$((i + 1)). ${tls13_domains[$i]}"
-                if [ "$i" -ge 4 ]; then
-                    break
-                fi
-            done
-        fi
     fi
 fi
 
-# Prompt user if they want to obtain SSL certificates
-read -p "$(print_yellow 'Do you want to obtain SSL certificates for the found domains? (yes/no): ')" get_ssl
+# Ask user if they want to obtain SSL certificates
+read -p "$(print_yellow 'Do you want to obtain SSL certificates for the found domains? (y/n): ')" get_ssl
 
-if [[ "$get_ssl" == "yes" ]]; then
+if [[ "$get_ssl" == "y" ]]; then
     # Run the ESSL script
     print_green "Obtaining SSL certificates..."
     sudo bash -c "$(curl -sL https://github.com/erfjab/ESSL/raw/main/essl.sh)"
