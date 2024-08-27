@@ -59,7 +59,7 @@ fi
 
 # Enable UFW and open necessary ports
 ufw enable
-ufw allow 22/tcp
+ufw allow 22
 ufw allow 80
 ufw allow 443
 ufw allow 8443
