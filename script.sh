@@ -46,10 +46,16 @@ read -p "$(print_yellow 'Please enter the website directory name: ')" site_dir
 chown -R www-data:www-data /var/www/html/"$site_dir"
 chmod -R 755 /var/www/html/"$site_dir"
 
-# Run Linux Optimizer script
-wget "https://raw.githubusercontent.com/hawshemi/Linux-Optimizer/main/linux-optimizer.sh" -O linux-optimizer.sh
-chmod +x linux-optimizer.sh
-bash linux-optimizer.sh
+# Prompt user if they want to run the Linux Optimizer script
+read -p "$(print_yellow 'Do you want to run the Linux Optimizer script? (y/n): ')" run_optimizer
+if [[ "$run_optimizer" == "y" ]]; then
+    # Run Linux Optimizer script
+    wget "https://raw.githubusercontent.com/hawshemi/Linux-Optimizer/main/linux-optimizer.sh" -O linux-optimizer.sh
+    chmod +x linux-optimizer.sh
+    bash linux-optimizer.sh
+else
+    print_yellow "Skipping Linux Optimizer script."
+fi
 
 # Enable UFW and open necessary ports
 ufw enable
