@@ -77,9 +77,9 @@ fi
 print_yellow "Public IP address of the server: $public_ip"
 
 # Prompt user if they want to find SNI domains using TLS 1.3
-read -p "$(print_yellow 'Do you want to find SNI domains using TLS 1.3? (yes/no): ')" find_sni
+read -p "$(print_yellow 'Do you want to find SNI domains using TLS 1.3? (y/n): ')" find_sni
 
-if [[ "$find_sni" == "yes" ]]; then
+if [[ "$find_sni" == "y" ]]; then
     print_green "Finding SNI domains using TLS 1.3..."
 
     # Use crt.sh to get domains associated with the server's IP
