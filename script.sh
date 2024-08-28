@@ -29,6 +29,70 @@ else
     print_green "Password is correct. Running the script..."
 fi
 
+# Prompt the user to install a panel
+read -p "$(print_yellow 'Do you want to install a panel? (y/n): ')" install_panel
+if [[ "$install_panel" == "y" ]]; then
+    # Prompt user to select a panel
+    print_yellow "Please select a panel to install:"
+    print_yellow "1) Sanaei X-UI"
+    print_yellow "2) Alireza X-UI"
+    print_yellow "3) Marzban"
+    print_yellow "4) S-UI"
+    print_yellow "5) WireGuard"
+    print_yellow "6) OpenVPN"
+
+    read -p "$(print_yellow 'Enter the number of your choice: ')" panel_choice
+
+    case $panel_choice in
+        1)
+            print_green "Installing Sanaei X-UI..."
+            bash <(curl -Ls https://raw.githubusercontent.com/mhsanaei/3x-ui/master/install.sh)
+            ;;
+        2)
+            print_green "Installing Alireza X-UI..."
+            bash <(curl -Ls https://raw.githubusercontent.com/alireza0/x-ui/master/install.sh)
+            ;;
+        3)
+            print_green "Installing Marzban..."
+            sudo bash -c "$(curl -sL https://github.com/Gozargah/Marzban-scripts/raw/master/marzban.sh)@install"
+
+            print_green "Running 'marzban cli admin create --sudo' command..."
+            marzban cli admin create --sudo
+
+            # Open port 8000 for Marzban
+            print_green "Opening port 8000 for Marzban..."
+            ufw allow 8000
+
+            # Prompt the user to run the IP2Limit script
+            read -p "$(print_yellow 'Do you want to run the IP2Limit script? (y/n): ')" run_ip2limit
+            if [[ "$run_ip2limit" == "y" ]]; then
+                print_green "Running IP2Limit script..."
+                bash <(curl -sSL https://houshmand-2005.github.io/v2iplimit.sh)
+            else
+                print_yellow "Skipping IP2Limit script."
+            fi
+            ;;
+        4)
+            print_green "Installing S-UI..."
+            bash <(curl -Ls https://raw.githubusercontent.com/alireza0/s-ui/master/install.sh)
+            ;;
+        5)
+            print_green "Installing WireGuard..."
+            wget https://git.io/wireguard -O wireguard-install.sh && bash wireguard-install.sh
+            ;;
+        6)
+            print_green "Installing OpenVPN..."
+            wget https://git.io/vpn -O openvpn-install.sh && bash openvpn-install.sh
+            ;;
+        *)
+            print_red "Invalid choice. Exiting."
+            exit 1
+            ;;
+    esac
+else
+    print_yellow "Skipping panel installation."
+fi
+
 # Install necessary packages
 apt update
 apt install -y apache2 wget nmap testssl.sh jq curl ufw
@@ -59,6 +123,7 @@ fi
 
 # Enable UFW and open necessary ports
 ufw enable
+ufw allow OpenSSH
 ufw allow 22
 ufw allow 80
 ufw allow 443
