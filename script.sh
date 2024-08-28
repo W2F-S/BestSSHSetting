@@ -61,6 +61,7 @@ if [[ "$install_panel" == "y" ]]; then
 
             # Open port 8000 for Marzban
             print_green "Opening port 8000 for Marzban..."
+            apt install -y ufw
             ufw allow 8000
 
             # Prompt the user to run the IP2Limit script
