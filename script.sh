@@ -121,9 +121,9 @@ if [[ "$find_sni" == "yes" ]]; then
 fi
 
 # Prompt user if they want to obtain SSL certificates
-read -p "$(print_yellow 'Do you want to obtain SSL certificates for the found domains? (yes/no): ')" get_ssl
+read -p "$(print_yellow 'Do you want to obtain SSL certificates for the found domains? (y/n): ')" get_ssl
 
-if [[ "$get_ssl" == "yes" ]]; then
+if [[ "$get_ssl" == "y" ]]; then
     # Run the ESSL script
     print_green "Obtaining SSL certificates..."
     sudo bash -c "$(curl -sL https://github.com/erfjab/ESSL/raw/main/essl.sh)"
