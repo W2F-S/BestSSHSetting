@@ -134,9 +134,7 @@ tunnel_menu() {
     print_yellow "3) IPtables Tunnel"
     print_yellow "4) Reverse Tunnel"
     print_yellow "5) 6to4 + GRE Tunnel"
-    print_yellow "6) Local IPv6 + New Tunnel Method"
-    print_yellow "7) Another Tunnel (Bypass Filtering)"
-    print_yellow "8) Return to Main Menu"
+    print_yellow "6) Return to Main Menu"
     
     read -p "$(print_yellow 'Please select a tunnel option: ')" tunnel_choice
     case $tunnel_choice in
@@ -147,8 +145,6 @@ tunnel_menu() {
            iptables -t nat -A PREROUTING -p tcp --dport 8080 -j DNAT --to-destination 192.168.1.100:8080 ;;
         4) bash <(curl -fsSL https://raw.githubusercontent.com/armanibash/RTT-ReverseTlsTunnel/main/install.sh) ;;
         5) print_green "Setting up 6to4 + GRE tunnel..." && ip tunnel add gre1 mode gre remote 192.168.1.1 local 192.168.1.2 ttl 255 && ip link set gre1 up ;;
-        6) print_green "Setting up new IPv6 tunnel method..."
-        7) print_green "Setting up bypass filtering tunnel..."
         8) main_menu ;;
         *) print_red "Invalid choice!" && tunnel_menu ;;
     esac
