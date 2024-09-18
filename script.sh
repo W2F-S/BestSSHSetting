@@ -134,7 +134,7 @@ tunnel_menu() {
     print_yellow "3) IPtables Tunnel"
     print_yellow "4) Reverse Tunnel"
     print_yellow "5) 6to4 + GRE Tunnel"
-    print_yellow "5) ISATAP TUNNEL"
+    print_yellow "6) ISATAP TUNNEL"
     print_yellow "7) Return to Main Menu"
     
     read -p "$(print_yellow 'Please select a tunnel option: ')" tunnel_choice
