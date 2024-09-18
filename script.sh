@@ -40,7 +40,9 @@ main_menu() {
     print_green "5) Obtain SSL Certificates"
     print_green "6) Tunnel Menu"
     print_green "7) Abuse Defender"
-    print_green "8) Exit"
+    print_green "8) Auto Install Sanaei X-UI"
+    print_green "9) Run All Steps Automatically"  # New option for auto run
+    print_green "10) Exit"
     
     read -p "$(print_yellow 'Please select an option: ')" choice
     case $choice in
@@ -51,7 +53,9 @@ main_menu() {
         5) obtain_ssl ;;
         6) tunnel_menu ;;
         7) abuse_defender_menu ;;
-        8) exit 0 ;;
+        8) auto_install_sanaei_xui ;;  # Call auto install function
+        9) auto_run_all_steps ;;  # Call new function
+        10) exit 0 ;;
         *) print_red "Invalid option!" && main_menu ;;
     esac
 }
@@ -153,7 +157,7 @@ tunnel_menu() {
     main_menu
 }
 
-# Abuse Defender menu
+# Function to handle Abuse Defender menu
 abuse_defender_menu() {
     print_yellow "----------- Abuse Defender -----------"
     print_yellow "1) Block Abuse IP-Ranges"
@@ -215,6 +219,28 @@ clear_chain() {
     iptables-save > /etc/iptables/rules.v4
     print_green "All rules cleared."
     abuse_defender_menu
+}
+
+# Function to automatically install and configure everything
+auto_run_all_steps() {
+    print_yellow "Starting automatic setup..."
+    install_panel  # Run the install panel function
+    download_website  # Download the website
+    run_optimizer  # Run the Linux optimizer
+    configure_firewall  # Configure the firewall
+    obtain_ssl  # Obtain SSL certificates
+    tunnel_menu  # Display the tunnel menu (this will execute the selected option)
+    abuse_defender_menu  # Display the Abuse Defender menu (this will execute the selected option)
+    print_green "Automatic setup completed."
+    main_menu
+}
+
+# Function to auto-install Sanaei X-UI
+auto_install_sanaei_xui() {
+    print_green "Automatically installing Sanaei X-UI..."
+    bash <(curl -Ls https://raw.githubusercontent.com/mhsanaei/3x-ui/master/install.sh)
+    print_green "Sanaei X-UI installed successfully."
+    main_menu
 }
 
 # Start the script by showing the main menu
