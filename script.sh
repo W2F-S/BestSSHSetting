@@ -13,9 +13,9 @@ fi
 
 # Define license keys (base64 encoded)
 license_keys=(
-    "YTJjci1lazVkLWFlZXctNTRjZA=="  # a2cr-ek5d-aeew-54cd
-    "a2VpNy1jbHc4LWFreDItcTE3NA=="  # kei7-clw8-akx2-q174
-    "c2tyZS0zazRtLW5ta24tNDdydA=="  # skre-3k4m-nmkn-47rt
+    "YTJjci1lazVkLWFlZXctNTRjZA=="  
+    "a2VpNy1jbHc4LWFreDItcTE3NA=="  
+    "c2tyZS0zazRtLW5ta24tNDdydA=="  
 )
 
 # License verification
