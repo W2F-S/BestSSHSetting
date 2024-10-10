@@ -12,7 +12,7 @@ if [ "$EUID" -ne 0 ]; then
 fi
 
 # Define the base64 encoded password
-encoded_password="VzJGU2NyaXB0U1N"
+encoded_password="VzJGU2NyaXB0U1NI"
 
 # Prompt user for password
 read -sp "$(print_yellow 'Please enter the script password: ')" user_password
