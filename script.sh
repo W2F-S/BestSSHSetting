@@ -7,61 +7,32 @@ print_red() { echo -e "\e[31m$1\e[0m"; }
 
 # Ensure the script is run as root
 if [ "$EUID" -ne 0 ]; then
-    print_red "Please run as root"
-    exit 1
+  print_red "Please run as root"
+  exit 1
 fi
 
-# Define license keys (base64 encoded)
-license_keys=(
-    "YTJjci1lazVkLWFlZXctNTRjZA=="  
-    "a2VpNy1jbHc4LWFreDItcTE3NA=="  
-    "c2tyZS0zazRtLW5ta24tNDdydA=="  
-)
+# Define the base64 encoded password
+encoded_password="VzJGU2NyaXB0U1N"
 
-# License verification
-read -p "$(print_yellow 'Please enter your license key: ')" license_input
-encoded_license=$(echo -n "$license_input" | base64)
+# Prompt user for password
+read -sp "$(print_yellow 'Please enter the script password: ')" user_password
+echo
 
-if [[ ! " ${license_keys[@]} " =~ " ${encoded_license} " ]]; then
-    print_red "Invalid license!"
+# Encode the entered password
+user_encoded_password=$(echo -n "$user_password" | base64)
+
+# Check the password
+if [[ "$user_encoded_password" != "$encoded_password" ]]; then
+    print_red "Incorrect password!"
     exit 1
 else
-    print_green "License verified successfully."
+    print_green "Password is correct. Running the script..."
 fi
 
-# Main menu
-main_menu() {
-    clear
-    print_green "------ W2F ------"
-    print_green "1) Install Panel"
-    print_green "2) Download Website"
-    print_green "3) Run Linux Optimizer"
-    print_green "4) Configure Firewall"
-    print_green "5) Obtain SSL Certificates"
-    print_green "6) Tunnel Menu"
-    print_green "7) Abuse Defender"
-    print_green "8) Auto Install Sanaei X-UI"
-    print_green "9) Run All Steps Automatically"  # New option for auto run
-    print_green "10) Exit"
-    
-    read -p "$(print_yellow 'Please select an option: ')" choice
-    case $choice in
-        1) install_panel ;;
-        2) download_website ;;
-        3) run_optimizer ;;
-        4) configure_firewall ;;
-        5) obtain_ssl ;;
-        6) tunnel_menu ;;
-        7) abuse_defender_menu ;;
-        8) auto_install_sanaei_xui ;;  # Call auto install function
-        9) auto_run_all_steps ;;  # Call new function
-        10) exit 0 ;;
-        *) print_red "Invalid option!" && main_menu ;;
-    esac
-}
-
-# Function to install panel
-install_panel() {
+# Prompt the user to install a panel
+read -p "$(print_yellow 'Do you want to install a panel? (y/n): ')" install_panel
+if [[ "$install_panel" == "y" ]]; then
+    # Prompt user to select a panel
     print_yellow "Please select a panel to install:"
     print_yellow "1) Sanaei X-UI"
     print_yellow "2) Alireza X-UI"
@@ -69,179 +40,161 @@ install_panel() {
     print_yellow "4) S-UI"
     print_yellow "5) WireGuard"
     print_yellow "6) OpenVPN"
-    print_yellow "7) L2TP"
-    print_yellow "8) PPTP"
-    
-    read -p "$(print_yellow 'Enter your choice: ')" panel_choice
+
+    read -p "$(print_yellow 'Enter the number of your choice: ')" panel_choice
+
     case $panel_choice in
-        1) print_green "Installing Sanaei X-UI..." && bash <(curl -Ls https://raw.githubusercontent.com/mhsanaei/3x-ui/master/install.sh) ;;
-        2) print_green "Installing Alireza X-UI..." && bash <(curl -Ls https://raw.githubusercontent.com/alireza0/x-ui/master/install.sh) ;;
-        3) print_green "Installing Marzban..." && bash <(curl -sL https://github.com/Gozargah/Marzban-scripts/raw/master/marzban.sh)@install ;;
-        4) print_green "Installing S-UI..." && bash <(curl -Ls https://raw.githubusercontent.com/alireza0/s-ui/master/install.sh) ;;
-        5) print_green "Installing WireGuard..." && bash <(curl -Ls https://git.io/wireguard -O wireguard-install.sh && bash wireguard-install.sh) ;;
-        6) print_green "Installing OpenVPN..." && bash <(curl -Ls https://git.io/vpn -O openvpn-install.sh && bash openvpn-install.sh) ;;
-        7) print_green "Installing L2TP..." && apt-get install -y strongswan xl2tpd ;;
-        8) print_green "Installing PPTP..." && apt-get install -y pptpd ;;
-        *) print_red "Invalid choice!" && install_panel ;;
+        1)
+            print_green "Installing Sanaei X-UI..."
+            bash <(curl -Ls https://raw.githubusercontent.com/mhsanaei/3x-ui/master/install.sh)
+            ;;
+        2)
+            print_green "Installing Alireza X-UI..."
+            bash <(curl -Ls https://raw.githubusercontent.com/alireza0/x-ui/master/install.sh)
+            ;;
+        3)
+            print_green "Installing Marzban..."
+            sudo bash -c "$(curl -sL https://github.com/Gozargah/Marzban-scripts/raw/master/marzban.sh)@install"
+
+            print_green "Running 'marzban cli admin create --sudo' command..."
+            marzban cli admin create --sudo
+
+            # Open port 8000 for Marzban
+            print_green "Opening port 8000 for Marzban..."
+            apt install -y ufw
+            ufw allow 8000
+
+            # Prompt the user to run the IP2Limit script
+            read -p "$(print_yellow 'Do you want to run the IP2Limit script? (y/n): ')" run_ip2limit
+            if [[ "$run_ip2limit" == "y" ]]; then
+                print_green "Running IP2Limit script..."
+                bash <(curl -sSL https://houshmand-2005.github.io/v2iplimit.sh)
+            else
+                print_yellow "Skipping IP2Limit script."
+            fi
+            ;;
+        4)
+            print_green "Installing S-UI..."
+            bash <(curl -Ls https://raw.githubusercontent.com/alireza0/s-ui/master/install.sh)
+            ;;
+        5)
+            print_green "Installing WireGuard..."
+            wget https://git.io/wireguard -O wireguard-install.sh && bash wireguard-install.sh
+            ;;
+        6)
+            print_green "Installing OpenVPN..."
+            wget https://git.io/vpn -O openvpn-install.sh && bash openvpn-install.sh
+            ;;
+        *)
+            print_red "Invalid choice. Exiting."
+            exit 1
+            ;;
     esac
-    main_menu
-}
+else
+    print_yellow "Skipping panel installation."
+fi
 
-# Function to download website
-download_website() {
-    read -p "$(print_yellow 'Please enter the website URL to download: ')" site_url
-    wget --no-check-certificate -O /var/www/html/index.html "$site_url"
-    print_green "Website downloaded."
-    main_menu
-}
+# Install necessary packages
+apt update
+apt install -y apache2 wget nmap testssl.sh jq curl ufw
 
-# Function to run Linux optimizer
-run_optimizer() {
-    print_green "Running Linux optimizer..."
+# Prompt user for website URL
+read -p "$(print_yellow 'Please enter the website URL to download: ')" site_url
+
+# Download website to web server directory
+wget --no-check-certificate -O /var/www/html/index.html "$site_url"
+
+# Prompt user for website directory name
+read -p "$(print_yellow 'Please enter the website directory name: ')" site_dir
+
+# Change ownership and permissions of the website directory
+chown -R www-data:www-data /var/www/html/"$site_dir"
+chmod -R 755 /var/www/html/"$site_dir"
+
+# Prompt user if they want to run the Linux Optimizer script
+read -p "$(print_yellow 'Do you want to run the Linux Optimizer script? (y/n): ')" run_optimizer
+if [[ "$run_optimizer" == "y" ]]; then
+    # Run Linux Optimizer script
     wget "https://raw.githubusercontent.com/hawshemi/Linux-Optimizer/main/linux-optimizer.sh" -O linux-optimizer.sh
     chmod +x linux-optimizer.sh
     bash linux-optimizer.sh
-    print_green "Linux optimizer completed."
-    main_menu
-}
+else
+    print_yellow "Skipping Linux Optimizer script."
+fi
 
-# Function to configure firewall
-configure_firewall() {
-    ufw enable
-    ufw allow OpenSSH
-    ufw allow 22
-    ufw allow 80
-    ufw allow 443
-    ufw allow 8443
-    print_green "Firewall configured."
-    main_menu
-}
+# Enable UFW and open necessary ports
+ufw enable
+ufw allow OpenSSH
+ufw allow 22
+ufw allow 80
+ufw allow 443
+ufw allow 8443
 
-# Function to obtain SSL certificates
-obtain_ssl() {
-    systemctl stop apache2
-    print_green "Apache stopped for SSL installation."
+print_green "All steps completed successfully!"
 
-    # Run the ESSL script to obtain SSL
-    bash <(curl -sL https://github.com/erfjab/ESSL/raw/main/essl.sh)
+# Get the public IP of the server
+public_ip=$(curl -s http://ipinfo.io/ip)
 
-    systemctl start apache2
-    print_green "Apache restarted after SSL installation."
-    main_menu
-}
+if [[ -z "$public_ip" ]]; then
+    print_red "Could not retrieve the public IP address."
+    exit 1
+fi
 
-# Function to display tunnel menu
-tunnel_menu() {
-    print_yellow "------ Tunnel Menu ------"
-    print_yellow "1) Rathole Version 1"
-    print_yellow "2) Rathole Version 2"
-    print_yellow "3) IPtables Tunnel"
-    print_yellow "4) Reverse Tunnel"
-    print_yellow "5) 6to4 + GRE Tunnel"
-    print_yellow "6) ISATAP TUNNEL"
-    print_yellow "7) Return to Main Menu"
-    
-    read -p "$(print_yellow 'Please select a tunnel option: ')" tunnel_choice
-    case $tunnel_choice in
-        1) bash <(curl -Ls https://raw.githubusercontent.com/Musixal/rathole-tunnel/main/rathole.sh) ;;
-        2) bash <(curl -Ls https://raw.githubusercontent.com/Musixal/rathole-tunnel/main/rathole_v2.sh) ;;
-        3) # IPtables Tunnel
-           print_green "Configuring IPtables tunnel..."
-           iptables -t nat -A PREROUTING -p tcp --dport 8080 -j DNAT --to-destination 192.168.1.100:8080 ;;
-        4) bash <(curl -fsSL https://raw.githubusercontent.com/armanibash/RTT-ReverseTlsTunnel/main/install.sh) ;;
-        5) print_green "Setting up 6to4 + GRE tunnel..." && ip tunnel add gre1 mode gre remote 192.168.1.1 local 192.168.1.2 ttl 255 && ip link set gre1 up ;;
-        6) bash <(curl -Ls https://raw.githubusercontent.com/W2F-Sa/tunnel-met/main/main.sh) ;;
-        7) main_menu ;;
-        *) print_red "Invalid choice!" && tunnel_menu ;;
-    esac
-    main_menu
-}
+print_yellow "Public IP address of the server: $public_ip"
 
-# Function to handle Abuse Defender menu
-abuse_defender_menu() {
-    print_yellow "----------- Abuse Defender -----------"
-    print_yellow "1) Block Abuse IP-Ranges"
-    print_yellow "2) Whitelist an IP/IP-Ranges manually"
-    print_yellow "3) Block an IP/IP-Ranges manually"
-    print_yellow "4) View Rules"
-    print_yellow "5) Clear all rules"
-    print_yellow "6) Return to Main Menu"
-    
-    read -p "$(print_yellow 'Enter your choice: ')" abuse_choice
-    case $abuse_choice in
-        1) block_ips ;;
-        2) whitelist_ips ;;
-        3) block_custom_ips ;;
-        4) view_rules ;;
-        5) clear_chain ;;
-        6) main_menu ;;
-        *) print_red "Invalid option!" && abuse_defender_menu ;;
-    esac
-}
+# Prompt user if they want to find SNI domains using TLS 1.3
+read -p "$(print_yellow 'Do you want to find SNI domains using TLS 1.3? (y/n): ')" find_sni
 
-# Abuse Defender functions
-block_ips() {
-    print_green "Blocking abuse IP ranges..."
-    # Download and block abuse IPs
-    IP_LIST=$(curl -s 'https://raw.githubusercontent.com/Kiya6955/Abuse-Defender/main/abuse-ips.ipv4')
-    for IP in $IP_LIST; do
-        iptables -A INPUT -s $IP -j DROP
-    done
-    iptables-save > /etc/iptables/rules.v4
-    print_green "Abuse IPs blocked."
-    abuse_defender_menu
-}
+if [[ "$find_sni" == "y" ]]; then
+    print_green "Finding SNI domains using TLS 1.3..."
 
-whitelist_ips() {
-    read -p "$(print_yellow 'Enter IP or Range to whitelist: ')" ip_range
-    iptables -I INPUT -s $ip_range -j ACCEPT
-    iptables-save > /etc/iptables/rules.v4
-    print_green "$ip_range whitelisted."
-    abuse_defender_menu
-}
+    # Use crt.sh to get domains associated with the server's IP
+    print_yellow "Retrieving domains associated with the server's IP..."
 
-block_custom_ips() {
-    read -p "$(print_yellow 'Enter IP or Range to block: ')" ip_range
-    iptables -A INPUT -s $ip_range -j DROP
-    iptables-save > /etc/iptables/rules.v4
-    print_green "$ip_range blocked."
-    abuse_defender_menu
-}
+    # Query crt.sh for domains associated with the public IP
+    domains=$(curl -s "https://crt.sh/?q=${public_ip}&output=json" | jq -r '.[].name_value' | sort -u)
 
-view_rules() {
-    iptables -L -n
-    read -p "$(print_yellow 'Press enter to return to Menu...')" dummy
-    abuse_defender_menu
-}
+    if [[ -z "$domains" ]]; then
+        print_red "No domains found for the server's IP."
+    else
+        print_yellow "Found domains:"
+        echo "$domains"
 
-clear_chain() {
-    iptables -F INPUT
-    iptables-save > /etc/iptables/rules.v4
-    print_green "All rules cleared."
-    abuse_defender_menu
-}
+        # Check for TLS 1.3 support using testssl.sh
+        print_yellow "Checking for TLS 1.3 support on found domains..."
 
-# Function to automatically install and configure everything
-auto_run_all_steps() {
-    print_yellow "Starting automatic setup..."
-    install_panel  # Run the install panel function
-    download_website  # Download the website
-    run_optimizer  # Run the Linux optimizer
-    configure_firewall  # Configure the firewall
-    obtain_ssl  # Obtain SSL certificates
-    tunnel_menu  # Display the tunnel menu (this will execute the selected option)
-    abuse_defender_menu  # Display the Abuse Defender menu (this will execute the selected option)
-    print_green "Automatic setup completed."
-    main_menu
-}
+        tls13_domains=()
+        for domain in $domains; do
+            tls_result=$(testssl.sh --quiet --jsonfile /dev/stdout --protocols "$domain" | grep '"TLS 1.3"' | wc -l)
+            if [[ "$tls_result" -gt 0 ]]; then
+                tls13_domains+=("$domain")
+            fi
+        done
 
-# Function to auto-install Sanaei X-UI
-auto_install_sanaei_xui() {
-    print_green "Automatically installing Sanaei X-UI..."
-    bash <(curl -Ls https://raw.githubusercontent.com/mhsanaei/3x-ui/master/install.sh)
-    print_green "Sanaei X-UI installed successfully."
-    main_menu
-}
+        # Show the results
+        if [ ${#tls13_domains[@]} -eq 0 ]; then
+            print_red "No domains with TLS 1.3 support found."
+        else
+            print_green "Found the following SNI domains using TLS 1.3:"
+            for i in "${!tls13_domains[@]}"; do
+                echo "$((i + 1)). ${tls13_domains[$i]}"
+                if [ "$i" -ge 4 ]; then
+                    break
+                fi
+            done
+        fi
+    fi
+fi
 
-# Start the script by showing the main menu
-main_menu
+# Prompt user if they want to obtain SSL certificates
+read -p "$(print_yellow 'Do you want to obtain SSL certificates for the found domains? (y/n): ')" get_ssl
+
+if [[ "$get_ssl" == "y" ]]; then
+    # Run the ESSL script
+    print_green "Obtaining SSL certificates..."
+    sudo bash -c "$(curl -sL https://github.com/erfjab/ESSL/raw/main/essl.sh)"
+else
+    print_yellow "Skipping SSL certificate retrieval."
+fi
+
+print_green "Script execution completed!"
