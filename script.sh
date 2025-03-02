@@ -93,10 +93,31 @@ if [[ "$install_panel" == "y" ]]; then
 else
     print_yellow "Skipping panel installation."
 fi
+# Install Apache and enable TLS 1.3
+print_green "Installing and configuring Apache..."
+apt update && apt install -y apache2
 
+# Enable required Apache modules
+print_green "Enabling necessary Apache modules..."
+a2enmod ssl headers http2
+systemctl restart apache2
+
+# Enable TLS 1.3 in Apache
+print_green "Configuring Apache for TLS 1.3..."
+echo "<IfModule mod_ssl.c>
+    SSLProtocol all -SSLv3 -TLSv1 -TLSv1.1
+    SSLHonorCipherOrder on
+    SSLCipherSuite TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256
+</IfModule>" > /etc/apache2/conf-available/tls-params.conf
+
+a2enconf tls-params
+systemctl restart apache2
+
+# Display installed SSL path
+print_green "Apache SSL Directory: /etc/ssl/certs/"
 # Install necessary packages
 apt update
-apt install -y apache2 wget nmap testssl.sh jq curl ufw
+apt install -y wget nmap testssl.sh jq curl ufw
 
 # Prompt user for website URL
 read -p "$(print_yellow 'Please enter the website URL to download: ')" site_url
